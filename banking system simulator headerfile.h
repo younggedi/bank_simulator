@@ -87,7 +87,13 @@ choices stringToEnum(const std::string& input) {
 		{"withdraw", choices::withdraw},
 		{"transfers", choices::transfers},
 		{"balance", choices::balance},
-		{"exit", choices::exits}
+		{"exit", choices::exits},
+		// numeric menu shortcuts
+		{"1", choices::deposit},
+		{"2", choices::withdraw},
+		{"3", choices::transfers},
+		{"4", choices::balance},
+		{"5", choices::exits}
 	};
 
 	auto it = choicesMap.find(input);
@@ -99,7 +105,12 @@ adminchoices stringToEnums(const std::string& input) {
 		{"create_account", adminchoices::create_account},
 		{"delete_account", adminchoices::delete_account},
 		{"display_accounts", adminchoices::display_accounts},
-		{"admin_exit", adminchoices::admin_exit}
+		{"admin_exit", adminchoices::admin_exit},
+		// numeric menu shortcuts
+		{"1", adminchoices::create_account},
+		{"2", adminchoices::delete_account},
+		{"3", adminchoices::display_accounts},
+		{"4", adminchoices::admin_exit}
 	};
 
 	auto it = adminchoicesMap.find(input);

@@ -53,6 +53,7 @@ int main () {
 					delete_account_function(customer_account_number,customers);
     				break;
     			case display_accounts:
+					system ("cls"); //ascii escape sequence to clear screen
 					display_accounts_function(customers);
     				break;
     			case admin_exit:
