@@ -9,10 +9,9 @@ Account user;
 int main () {
 	string line;
 	cout<<"loading data... \n";
+	// Open sample data file and load accounts into memory
 	ifstream myfile;
 	myfile.open ("sample_bank_data.txt",ifstream::in);
-	//ofstream mfile;
-	//mfile.open("bank_data2.txt",ofstream::out);
 	if (!myfile.is_open()) {
         cout<< "Error: Unable to open file!" << endl;
         return 1;
@@ -30,6 +29,7 @@ int main () {
 		customer_account_number.push_back(words[2]);
 	}
 	myfile.close();
+	// admin password kept in memory; can be changed via admin menu (current change function doesn't persist)
 	string admin_password="younggedi123";
 	string responce;
 	l:;
@@ -53,7 +53,7 @@ int main () {
 					delete_account_function(customer_account_number,customers);
     				break;
     			case change_password:
-					change_password_function(admin_password);
+					change_password_function(admin_password); // note: pass by reference would be needed to update admin_password
     				break;
     			case admin_exit:
     				goto l;
@@ -134,6 +134,7 @@ int main () {
 		goto l;
 	}
 	h:;
+	// Save updated accounts to temporary file, replace original file
 	ofstream mfile ("bank_data2.txt");
 	for(int i=0;i<customer_account_number.size();i++){
 		customers[i].print(drop);

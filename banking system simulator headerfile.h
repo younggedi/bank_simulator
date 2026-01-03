@@ -9,7 +9,7 @@
 #include <iomanip>
 using namespace std;
 
-
+// Account models a single customer's bank account and operations on it.
 class Account{
 	private:
 		string first_name;
@@ -19,9 +19,11 @@ class Account{
 		string account_number;
 	public:
 		void transfer_funds();
+		// deposit_funds: increase balance by amount (unsigned int used for non-negative amounts)
 		void deposit_funds(unsigned int amount){
 			account_balance+=amount;
 		}
+		// withdraw_funds: subtract amount if sufficient balance, otherwise notify user
 		void withdraw_funds(unsigned int amount){
 			if(amount>account_balance){
 				cout<<"insufficient funds";
@@ -29,6 +31,7 @@ class Account{
 			else account_balance-=amount;
 		}
 		
+		// allocate_information: initialize account fields from a vector of strings
 		void allocate_information(vector<string> &words){
 			first_name=words[0];
 			last_name=words[1];
@@ -37,13 +40,16 @@ class Account{
 			account_balance=stod(words[4]);
 
 		}
+		// display_funds: print balance with two decimal places
 		void display_funds() const{
 			cout<<fixed<<setprecision(2);
 			cout<<"your current account balance is:"<<account_balance<<endl;
 		}
+		// check: verify provided PIN matches account PIN
 		bool check(const string &PIN) const{
 			return PIN==pin;
 		}
+		// print: append account data to a provided string (used when saving all accounts)
 		void print(string &drop) const{
     		ostringstream oss;
 			oss<<fixed<<setprecision(2)<<account_balance;
@@ -53,11 +59,12 @@ class Account{
 
 
 
+// choices: operations available to customers
 enum choices{
 	deposit, withdraw, transfers, balance, exits, unknown
 };
 
-// added: admin choices for administrative operations
+// adminchoices: operations available to admin
 enum adminchoices{
 	create_account,
 	delete_account,
@@ -66,6 +73,7 @@ enum adminchoices{
 	admin_unknown
 };
 
+// stringToEnum: convert input string to customer choice enum (safe fallback to unknown)
 choices stringToEnum(const std::string& input) {
 	static std::unordered_map<std::string, choices> choicesMap = {
 		{"deposit", choices::deposit},
@@ -78,6 +86,7 @@ choices stringToEnum(const std::string& input) {
 	auto it = choicesMap.find(input);
 	return (it != choicesMap.end()) ? it->second : choices::unknown;
 }
+// stringToEnums: convert admin input string to adminchoice enum
 adminchoices stringToEnums(const std::string& input) {
 	static std::unordered_map<std::string, adminchoices> adminchoicesMap = {
 		{"create_account", adminchoices::create_account},
@@ -90,6 +99,7 @@ adminchoices stringToEnums(const std::string& input) {
 	return (it != adminchoicesMap.end()) ? it->second : adminchoices::admin_unknown;
 }
 
+// transfer: move funds from customer i to a recipient found by account number
 void transfer(int &i,unsigned int&amount, vector<string>&customer_account_number ,vector<Account>&customers){
 	cout<<"enter the account number of the recipient:";
 	string account_number_recipient;
@@ -100,11 +110,13 @@ void transfer(int &i,unsigned int&amount, vector<string>&customer_account_number
 		return ;
 	}
     int recipient_id=distance(customer_account_number.begin(), abcd);
+	// withdraw from sender and deposit to recipient
 	customers[i].withdraw_funds(amount);
 	customers[recipient_id].deposit_funds(amount);
 	return ;
 }
 
+// create_account_function: gather input and create a new Account, ensuring unique account number
 void create_account_function(vector<string>&customer_account_number,vector<Account>&customers){
 	customers.push_back(Account());
 	vector<string>create;
@@ -134,6 +146,7 @@ void create_account_function(vector<string>&customer_account_number,vector<Accou
 	customers.back().allocate_information(create);
 }	
 
+// delete_account_function: remove account by account number if found
 void delete_account_function(vector<string>&customer_account_number,vector<Account>&customers){
 	string account_number;
 	cout<<"enter the account number to delete:";
@@ -150,11 +163,12 @@ void delete_account_function(vector<string>&customer_account_number,vector<Accou
 	}
 }
 
+// change_password_function: change the admin password (note: current implementation modifies local copy)
 void change_password_function(string password){
 	string new_password;
 	cout<<"enter new password:";
 	cin>>new_password;
-	password=new_password;
+	password=new_password; // modifies local copy only — consider passing by reference to persist change
 	cout<<"password changed successfully."<<endl;
 
 }
