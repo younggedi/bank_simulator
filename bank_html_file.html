@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Banking System Simulator — Web Implementation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color:#222; }
+        .panel { border:1px solid #ddd; padding:12px; border-radius:6px; margin-bottom:12px; background:#fafafa; }
+        label{display:block;margin:8px 0 4px;}
+        input, select, button, textarea { padding:6px; font-size:14px; }
+        pre { background:#f4f4f4; padding:8px; border-radius:4px; overflow:auto; }
+        .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+        .hidden{ display:none; }
+        table { border-collapse: collapse; width:100%; }
+        th, td { border:1px solid #ddd; padding:6px; text-align:left; }
+    </style>
+</head>
+<body>
+    <!--
+      This HTML implements the bank simulator in-browser using JavaScript.
+      Comments throughout the file explain the structure and how the JS mirrors the C++ program.
+    -->
+
+    <h1>Banking System Simulator — Browser Version</h1>
+
+    <!-- Main controls: load data, choose role (admin/customer) -->
+    <div class="panel">
+        <label>Sample data (one account per line: first last accountNumber pin balance)</label>
+        <textarea id="dataArea" rows="5" style="width:100%"></textarea>
+        <div class="row" style="margin-top:8px;">
+            <button id="loadDefault">Load Default Sample Data</button>
+            <button id="importData">Import Data</button>
+            <button id="exportData">Export Data (save to clipboard)</button>
+        </div>
+        <hr>
+        <label>Choose role:</label>
+        <div class="row">
+            <button id="roleAdmin">Admin</button>
+            <button id="roleCustomer">Customer</button>
+        </div>
+    </div>
+
+    <!-- Admin panel: login and admin operations -->
+    <div id="adminPanel" class="panel hidden">
+        <!-- Admin password is default 'younggedi123' like the C++ app -->
+        <label>Admin password:</label>
+        <div class="row">
+            <input id="adminPass" type="password" placeholder="password" />
+            <button id="adminLogin">Login</button>
+            <button id="adminBack">Back</button>
+        </div>
+
+        <!-- After login: admin operations -->
+        <div id="adminOps" class="hidden" style="margin-top:12px;">
+            <div class="row">
+                <button id="btnCreate">Create Account</button>
+                <button id="btnDelete">Delete Account</button>
+                <button id="btnDisplay">Display Accounts</button>
+                <button id="btnLogout">Logout</button>
+            </div>
+
+            <!-- create account form -->
+            <div id="createForm" class="hidden" style="margin-top:12px;">
+                <label>First name</label><input id="cFirst" />
+                <label>Last name</label><input id="cLast" />
+                <label>Account number</label><input id="cAcc" />
+                <label>PIN</label><input id="cPin" />
+                <label>Initial deposit</label><input id="cBal" type="number" />
+                <div class="row" style="margin-top:8px;">
+                    <button id="createConfirm">Create</button>
+                    <button id="createCancel">Cancel</button>
+                </div>
+            </div>
+
+            <!-- delete form -->
+            <div id="deleteForm" class="hidden" style="margin-top:12px;">
+                <label>Account number to delete</label><input id="dAcc" />
+                <div class="row" style="margin-top:8px;">
+                    <button id="deleteConfirm">Delete</button>
+                    <button id="deleteCancel">Cancel</button>
+                </div>
+            </div>
+
+            <!-- display area -->
+            <div id="displayArea" class="hidden" style="margin-top:12px;">
+                <h3>Accounts</h3>
+                <div id="accountsTable"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer panel: login and customer operations -->
+    <div id="customerPanel" class="panel hidden">
+        <label>Account number</label>
+        <input id="custAcc" />
+        <label>PIN</label>
+        <input id="custPin" />
+        <div class="row" style="margin-top:8px;">
+            <button id="custLogin">Login</button>
+            <button id="custBack">Back</button>
+        </div>
+
+        <div id="custOps" class="hidden" style="margin-top:12px;">
+            <h3 id="custHeader"></h3>
+            <div class="row">
+                <button id="custDeposit">Deposit</button>
+                <button id="custWithdraw">Withdraw</button>
+                <button id="custTransfer">Transfer</button>
+                <button id="custBalance">Balance</button>
+                <button id="custLogout">Logout</button>
+            </div>
+            <div id="custForm" style="margin-top:12px;"></div>
+            <div id="custMsg" style="margin-top:12px;color:#b00;"></div>
+        </div>
+    </div>
+
+    <!-- small help with notes -->
+    <div class="panel">
+        <h4>Notes & teaching comments</h4>
+        <p>
+            The JavaScript below implements the same logic as the C++ program: accounts are an array of objects,
+            admin password is a memory variable (default <code>younggedi123</code>), and operations modify the array.
+            Use "Import Data" after editing the sample to load accounts into the simulator.
+        </p>
+    </div>
+
+    <script>
+    // --- Minimal in-browser simulator implementation (mirrors the C++ logic) ---
+    // Accounts are objects: { first, last, acc, pin, balance }
+    let accounts = [];
+    let adminPassword = 'younggedi123';
+
+    // Helpers: parse lines from textarea to accounts array
+    function parseData(text){
+        const lines = text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+        const out = [];
+        for(const line of lines){
+            const parts = line.split(/\s+/);
+            if(parts.length < 5) continue;
+            out.push({
+                first: parts[0],
+                last: parts[1],
+                acc: parts[2],
+                pin: parts[3],
+                balance: parseFloat(parts[4])
+            });
+        }
+        return out;
+    }
+    function dataToText(){
+        return accounts.map(a => `${a.first} ${a.last} ${a.acc} ${a.pin} ${a.balance.toFixed(2)}`).join('\n');
+    }
+
+    // UI wiring
+    const dataArea = document.getElementById('dataArea');
+    document.getElementById('loadDefault').addEventListener('click', ()=>{
+        // default sample data (teaches file format)
+        dataArea.value = 'John Doe 123456 4321 1000.50\nAlice Smith 987654 1111 250.00';
+    });
+    document.getElementById('importData').addEventListener('click', ()=>{
+        accounts = parseData(dataArea.value);
+        alert('Imported '+accounts.length+' accounts.');
+    });
+    document.getElementById('exportData').addEventListener('click', async ()=>{
+        const txt = dataToText();
+        try{
+            await navigator.clipboard.writeText(txt);
+            alert('Exported data to clipboard.');
+        }catch(e){ prompt('Copy this data', txt); }
+    });
+
+    // role buttons
+    document.getElementById('roleAdmin').addEventListener('click', ()=>{ showPanel('adminPanel'); });
+    document.getElementById('roleCustomer').addEventListener('click', ()=>{ showPanel('customerPanel'); });
+
+    function showPanel(id){
+        ['adminPanel','customerPanel'].forEach(p=>document.getElementById(p).classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    // Admin login and ops
+    document.getElementById('adminBack').addEventListener('click', ()=>{ document.getElementById('adminPanel').classList.add('hidden'); });
+    document.getElementById('adminLogin').addEventListener('click', ()=>{
+        const pass = document.getElementById('adminPass').value;
+        if(pass === adminPassword){
+            document.getElementById('adminOps').classList.remove('hidden');
+        } else alert('Wrong admin password');
+    });
+    document.getElementById('btnCreate').addEventListener('click', ()=>{ toggle('createForm', true); });
+    document.getElementById('btnDelete').addEventListener('click', ()=>{ toggle('deleteForm', true); });
+    document.getElementById('btnDisplay').addEventListener('click', ()=>{ renderAccounts(); });
+
+    // Create account handlers
+    document.getElementById('createCancel').addEventListener('click', ()=>{ toggle('createForm', false); });
+    document.getElementById('createConfirm').addEventListener('click', ()=>{
+        const f = document.getElementById('cFirst').value.trim();
+        const l = document.getElementById('cLast').value.trim();
+        const acc = document.getElementById('cAcc').value.trim();
+        const pin = document.getElementById('cPin').value.trim();
+        const bal = parseFloat(document.getElementById('cBal').value) || 0;
+        if(!f||!l||!acc||!pin){ alert('fill all fields'); return; }
+        if(accounts.find(a=>a.acc===acc)){ alert('account already exists'); return; }
+        accounts.push({first:f,last:l,acc:acc,pin:pin,balance:bal});
+        alert('Account created');
+        toggle('createForm', false);
+    });
+
+    // Delete handlers
+    document.getElementById('deleteCancel').addEventListener('click', ()=>{ toggle('deleteForm', false); });
+    document.getElementById('deleteConfirm').addEventListener('click', ()=>{
+        const acc = document.getElementById('dAcc').value.trim();
+        const idx = accounts.findIndex(a=>a.acc===acc);
+        if(idx>=0){ accounts.splice(idx,1); alert('Deleted'); } else alert('Not found');
+        toggle('deleteForm', false);
+    });
+
+    // Render accounts table
+    function renderAccounts(){
+        const container = document.getElementById('accountsTable');
+        if(accounts.length===0){ container.innerHTML = '<p>No accounts loaded.</p>'; return; }
+        let html = '<table><tr><th>First</th><th>Last</th><th>Account</th><th>PIN</th><th>Balance</th></tr>';
+        for(const a of accounts){
+            html += `<tr><td>${escapeHtml(a.first)}</td><td>${escapeHtml(a.last)}</td><td>${escapeHtml(a.acc)}</td><td>${escapeHtml(a.pin)}</td><td>${a.balance.toFixed(2)}</td></tr>`;
+        }
+        html += '</table>';
+        container.innerHTML = html;
+        document.getElementById('displayArea').classList.remove('hidden');
+    }
+
+    // Customer login and ops
+    document.getElementById('custBack').addEventListener('click', ()=>{ document.getElementById('customerPanel').classList.add('hidden'); });
+    document.getElementById('custLogin').addEventListener('click', ()=>{
+        const acc = document.getElementById('custAcc').value.trim();
+        const pin = document.getElementById('custPin').value.trim();
+        const idx = accounts.findIndex(a=>a.acc===acc);
+        if(idx<0){ alert('No account found'); return; }
+        if(accounts[idx].pin !== pin){ alert('PIN is wrong'); return; }
+        // successful login
+        document.getElementById('custOps').classList.remove('hidden');
+        document.getElementById('custHeader').textContent = `Welcome ${accounts[idx].first} ${accounts[idx].last} (Account: ${accounts[idx].acc})`;
+        document.getElementById('custMsg').textContent = '';
+        document.getElementById('custOps').dataset.idx = idx;
+    });
+
+    document.getElementById('custLogout').addEventListener('click', ()=>{
+        document.getElementById('custOps').classList.add('hidden');
+        document.getElementById('custForm').innerHTML = '';
+    });
+
+    // Customer action handlers
+    document.getElementById('custDeposit').addEventListener('click', ()=>{ showCustForm('deposit'); });
+    document.getElementById('custWithdraw').addEventListener('click', ()=>{ showCustForm('withdraw'); });
+    document.getElementById('custTransfer').addEventListener('click', ()=>{ showCustForm('transfer'); });
+    document.getElementById('custBalance').addEventListener('click', ()=>{
+        const idx = +document.getElementById('custOps').dataset.idx;
+        alert('Balance: '+accounts[idx].balance.toFixed(2));
+    });
+
+    function showCustForm(kind){
+        const idx = +document.getElementById('custOps').dataset.idx;
+        const form = document.getElementById('custForm');
+        form.innerHTML = '';
+        if(kind==='deposit' || kind==='withdraw'){
+            form.innerHTML = `<label>Amount</label><input id="amt" type="number" /> <div class="row" style="margin-top:8px;"><button id="doIt">${kind}</button><button id="cancelCust">Cancel</button></div>`;
+            document.getElementById('doIt').addEventListener('click', ()=>{
+                const amt = Math.abs(parseFloat(document.getElementById('amt').value)||0);
+                if(amt<=0){ alert('Enter amount'); return; }
+                if(kind==='deposit'){ accounts[idx].balance += amt; alert('Deposited. New balance: '+accounts[idx].balance.toFixed(2)); }
+                else {
+                    if(amt > accounts[idx].balance){ alert('insufficient funds'); return; }
+                    accounts[idx].balance -= amt; alert('Withdrawn. New balance: '+accounts[idx].balance.toFixed(2));
+                }
+                form.innerHTML = '';
+            });
+        } else if(kind==='transfer'){
+            form.innerHTML = `<label>Recipient account number</label><input id="recAcc" /> <label>Amount</label><input id="amt" type="number" /> <div class="row" style="margin-top:8px;"><button id="doTransfer">Transfer</button><button id="cancelCust">Cancel</button></div>`;
+            document.getElementById('doTransfer').addEventListener('click', ()=>{
+                const rec = document.getElementById('recAcc').value.trim();
+                const amt = Math.abs(parseFloat(document.getElementById('amt').value)||0);
+                if(!rec || amt<=0){ alert('Fill fields'); return; }
+                const ridx = accounts.findIndex(a=>a.acc===rec);
+                if(ridx<0){ alert('recipient not found'); return; }
+                if(amt > accounts[idx].balance){ alert('insufficient funds'); return; }
+                accounts[idx].balance -= amt;
+                accounts[ridx].balance += amt;
+                alert('Transferred. Your new balance: '+accounts[idx].balance.toFixed(2));
+                form.innerHTML = '';
+            });
+        }
+        document.getElementById('cancelCust')?.addEventListener('click', ()=>{ form.innerHTML=''; });
+    }
+
+    // Utility toggles and helpers
+    function toggle(id, show){
+        document.getElementById(id).classList.toggle('hidden', !show);
+        // also hide others to avoid clutter
+        if(id === 'createForm' && show) { document.getElementById('deleteForm').classList.add('hidden'); }
+        if(id === 'deleteForm' && show) { document.getElementById('createForm').classList.add('hidden'); }
+    }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+    // Small teaching helper: when page loads, prefill sample
+    document.addEventListener('DOMContentLoaded', ()=>{ document.getElementById('loadDefault').click(); });
+
+    </script>
+</body>
+</html>
