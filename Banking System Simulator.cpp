@@ -41,7 +41,7 @@ int main () {
 		if(admin_test==admin_password){
 			cout<<"WELCOME ADMIN"<<endl;
 		while(true){
-			cout<<"select one of the following \n 1.) create_account \n 2.) delete_account \n 3.) change_password \n 4.) admin_exit \n";
+			cout<<"select one of the following \n 1.) create_account \n 2.) delete_account \n 3.) display_accounts \n 4.) admin_exit \n";
 			string admin_input;
 			cin>>admin_input;
 			adminchoices admin_process=stringToEnums(admin_input);
@@ -52,8 +52,8 @@ int main () {
     			case delete_account:
 					delete_account_function(customer_account_number,customers);
     				break;
-    			case change_password:
-					change_password_function(admin_password); // note: pass by reference would be needed to update admin_password
+    			case display_accounts:
+					display_accounts_function(customers);
     				break;
     			case admin_exit:
     				goto l;

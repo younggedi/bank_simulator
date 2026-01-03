@@ -55,6 +55,13 @@ class Account{
 			oss<<fixed<<setprecision(2)<<account_balance;
 			drop+=first_name+" "+last_name+" "+account_number+" "+pin+" "+oss.str()+"\n";
 		}
+		// display_account: print account details (for admin use)
+		void display_account() const{
+			cout<<"Account Holder: "<<first_name<<" "<<last_name<<endl;
+			cout<<"Account Number: "<<account_number<<endl;
+			cout<<fixed<<setprecision(2)<<"Account Balance: "<<account_balance<<endl;
+			cout<<"-----------------------------------"<<endl;
+		}
 };
 
 
@@ -68,7 +75,7 @@ enum choices{
 enum adminchoices{
 	create_account,
 	delete_account,
-	change_password,
+	display_accounts,
 	admin_exit,
 	admin_unknown
 };
@@ -91,7 +98,7 @@ adminchoices stringToEnums(const std::string& input) {
 	static std::unordered_map<std::string, adminchoices> adminchoicesMap = {
 		{"create_account", adminchoices::create_account},
 		{"delete_account", adminchoices::delete_account},
-		{"change_password", adminchoices::change_password},
+		{"display_accounts", adminchoices::display_accounts},
 		{"admin_exit", adminchoices::admin_exit}
 	};
 
@@ -164,11 +171,9 @@ void delete_account_function(vector<string>&customer_account_number,vector<Accou
 }
 
 // change_password_function: change the admin password (note: current implementation modifies local copy)
-void change_password_function(string password){
-	string new_password;
-	cout<<"enter new password:";
-	cin>>new_password;
-	password=new_password; // modifies local copy only — consider passing by reference to persist change
-	cout<<"password changed successfully."<<endl;
-
+void display_accounts_function(vector<Account>&customers){
+	cout<<"-----------------------------------"<<endl;
+	for(int i=0;i<customers.size();i++){
+		customers[i].display_account();
+	}
 }
