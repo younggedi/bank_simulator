@@ -6,3 +6,4 @@ out
 .vscode
 *.txt
 *.exe
+.gitignore
