@@ -11,7 +11,7 @@ int main () {
 	cout<<"loading data... \n";
 	// Open sample data file and load accounts into memory
 	ifstream myfile;
-	myfile.open ("sample_bank_data.txt",ifstream::in);
+	myfile.open ("sample_bank_data.csv",ifstream::in);
 	if (!myfile.is_open()) {
         cout<< "Error: Unable to open file!" << endl;
         return 1;
@@ -23,7 +23,7 @@ int main () {
 		stringstream ss(line);
 		string word;
 		vector<string> words;
-		while(ss>>word)words.push_back(word);
+		while(getline(ss, word, ','))words.push_back(word);
 		user.allocate_information(words);
 		customers.push_back(user);
 		customer_account_number.push_back(words[2]);
@@ -136,14 +136,14 @@ int main () {
 	}
 	h:;
 	// Save updated accounts to temporary file, replace original file
-	ofstream mfile ("bank_data2.txt");
+	ofstream mfile ("bank_data2.csv");
 	for(int i=0;i<customer_account_number.size();i++){
 		customers[i].print(drop);
 	}
 	mfile<<drop;
 	mfile.close();
-	remove("sample_bank_data.txt");
-	rename("bank_data2.txt","sample_bank_data.txt");
+	remove("sample_bank_data.csv");
+	rename("bank_data2.csv","sample_bank_data.csv");
 	return 0;
 }
 

@@ -53,7 +53,7 @@ class Account{
 		void print(string &drop) const{
     		ostringstream oss;
 			oss<<fixed<<setprecision(2)<<account_balance;
-			drop+=first_name+" "+last_name+" "+account_number+" "+pin+" "+oss.str()+"\n";
+			drop+=first_name+","+last_name+","+account_number+","+pin+","+oss.str()+"\n";
 		}
 		// display_account: print account details (for admin use)
 		void display_account() const{

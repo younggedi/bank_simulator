@@ -29,7 +29,7 @@ vector<string> last_names = {
 int main() {
     srand(time(0)); // Seed random numbers
     
-    ofstream file("bank_data.txt");
+    ofstream file("sample_bank_data.csv");
     if (!file.is_open()) {
         cerr << "Error: Could not open file for writing!" << endl;
         return 1;
@@ -45,12 +45,12 @@ int main() {
         int pin = 1000 + rand() % 9000; // random 4-digit PIN
         double balance = (100.0 + (rand() % 990000) / 100.0); // between 100 and 10,000
 
-        file << first << " " << last << " " << acc_num << " " << pin 
-             << " " << fixed << setprecision(6) << balance << "\n"; // double newline for gap
+        file << first << "," << last << "," << acc_num << "," << pin 
+             << "," << fixed << setprecision(6) << balance << "\n"; // double newline for gap
     }
 
     file.close();
-    cout << "Generated " << total_entries << " entries in generated_bank_data.txt" << endl;
+    cout << "Generated " << total_entries << " entries in generated_bank_data.csv" << endl;
     return 0;
 }
 
