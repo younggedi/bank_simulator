@@ -20,6 +20,7 @@ int main () {
 		cout<<"unable to access log file"<<endl;
 		return 1;
 	}
+
 ;	read_csv_file(myfile, customers, customer_account_number, user);
 	myfile.close();
 	// admin password kept in memory; can be changed via admin menu (current change function doesn't persist)

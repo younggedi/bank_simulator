@@ -217,6 +217,7 @@ void read_csv_file(istream &myfile, vector<Account>&customers, vector<string>&cu
 }
 
 void write_csv_file(ostream &mfile, vector<Account>&customers, string &drop){
+	mfile<<"first_name,last_name,account_number,pin,account_balance\n";
 	for(int i=0;i<customers.size();i++){
 		customers[i].print(drop);
 	}
