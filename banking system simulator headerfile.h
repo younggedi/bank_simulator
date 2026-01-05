@@ -7,7 +7,17 @@
 #include <sstream>
 #include<windows.h>
 #include <iomanip>
+#include <chrono>
+#include <ctime>
 using namespace std;
+
+string currentDateTime() {
+	auto now = chrono::system_clock::now();
+	time_t now_time_t = chrono::system_clock::to_time_t(now);
+	char buf[80];
+	strftime(buf, sizeof(buf), "%Y-%m-%d %X", localtime(&now_time_t));
+	return string(buf);
+}
 
 // Account models a single customer's bank account and operations on it.
 class Account{
@@ -20,15 +30,17 @@ class Account{
 	public:
 		void transfer_funds();
 		// deposit_funds: increase balance by amount (unsigned int used for non-negative amounts)
-		void deposit_funds(unsigned int amount){
+		void deposit_funds(unsigned int amount,ostream &customerfile){
 			account_balance+=amount;
+			customerfile<<account_number<<","<<amount<<","<<"deposit,"<<currentDateTime()<<endl;
 		}
 		// withdraw_funds: subtract amount if sufficient balance, otherwise notify user
-		void withdraw_funds(unsigned int amount){
+		void withdraw_funds(unsigned int amount,ostream &customerfile){
 			if(amount>account_balance){
 				cout<<"insufficient funds";
 			}
 			else account_balance-=amount;
+			customerfile<<account_number<<","<<amount<<","<<"withdrawal,"<<currentDateTime()<<endl;
 		}
 		
 		// allocate_information: initialize account fields from a vector of strings
@@ -118,7 +130,7 @@ adminchoices stringToEnums(const std::string& input) {
 }
 
 // transfer: move funds from customer i to a recipient found by account number
-void transfer(int &i,unsigned int&amount, vector<string>&customer_account_number ,vector<Account>&customers){
+void transfer(int &i,unsigned int&amount, vector<string>&customer_account_number ,vector<Account>&customers,ostream &customerfile){
 	cout<<"enter the account number of the recipient:";
 	string account_number_recipient;
     cin>>account_number_recipient;
@@ -129,9 +141,9 @@ void transfer(int &i,unsigned int&amount, vector<string>&customer_account_number
 	}
     int recipient_id=distance(customer_account_number.begin(), abcd);
 	// withdraw from sender and deposit to recipient
-	customers[i].withdraw_funds(amount);
-	customers[recipient_id].deposit_funds(amount);
-	return ;
+	customers[i].withdraw_funds(amount, customerfile);
+	customers[recipient_id].deposit_funds(amount, customerfile);
+	return;
 }
 
 // create_account_function: gather input and create a new Account, ensuring unique account number
@@ -187,4 +199,27 @@ void display_accounts_function(vector<Account>&customers){
 	for(int i=0;i<customers.size();i++){
 		customers[i].display_account();
 	}
+}
+
+void read_csv_file(istream &myfile, vector<Account>&customers, vector<string>&customer_account_number, Account &user){
+	string line;
+	while (getline(myfile, line)) {
+		vector<string> words;
+		string word;
+		istringstream s(line);
+		while (getline(s, word, ',')) {
+			words.push_back(word);
+		}
+		user.allocate_information(words);
+		customers.push_back(user);
+		customer_account_number.push_back(words[2]);
+	}
+}
+
+void write_csv_file(ostream &mfile, vector<Account>&customers, string &drop){
+	for(int i=0;i<customers.size();i++){
+		customers[i].print(drop);
+	}
+	mfile<<drop;
+	
 }

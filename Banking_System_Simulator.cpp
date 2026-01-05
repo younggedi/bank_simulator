@@ -1,12 +1,10 @@
 #include"banking system simulator headerfile.h"
 using namespace std;
-vector<string> customer_account_number;
-string drop;
-
-
-vector<Account> customers;
-Account user;
 int main () {
+	vector<string> customer_account_number;
+	string drop;
+	vector<Account> customers;
+	Account user;
 	string line;
 	cout<<"loading data... \n";
 	// Open sample data file and load accounts into memory
@@ -16,18 +14,13 @@ int main () {
         cout<< "Error: Unable to open file!" << endl;
         return 1;
 	}
-	while (getline(myfile, line)){
-		if (line.empty()) {
-		cout << "Error: Failed to read data" << endl;
-		return 1;}
-		stringstream ss(line);
-		string word;
-		vector<string> words;
-		while(getline(ss, word, ','))words.push_back(word);
-		user.allocate_information(words);
-		customers.push_back(user);
-		customer_account_number.push_back(words[2]);
+	ofstream customerfile;
+	customerfile.open ("customer_log.csv",std::ios::app);
+	if(!customerfile.is_open()){
+		cout<<"unable to access log file"<<endl;
+		return 1;
 	}
+;	read_csv_file(myfile, customers, customer_account_number, user);
 	myfile.close();
 	// admin password kept in memory; can be changed via admin menu (current change function doesn't persist)
 	string admin_password="younggedi123";
@@ -93,14 +86,14 @@ int main () {
     						cout<<"enter amount:";
     						cin>>amount;
     						cout<<endl;
-    						customers[customer_id].deposit_funds(amount);
+    						customers[customer_id].deposit_funds(amount,customerfile);
     						customers[customer_id].display_funds();
     						break;
     					case withdraw:
     						cout<<"enter amount:";
     						cin>>amount;
     						cout<<endl;
-    						customers[customer_id].withdraw_funds(amount);
+    						customers[customer_id].withdraw_funds(amount, customerfile);
     						customers[customer_id].display_funds();
     						break;
     					case balance:
@@ -115,7 +108,7 @@ int main () {
     						cout<<"enter amount:";
     						cin>>amount;
     						cout<<endl;
-    						transfer(customer_id,amount,customer_account_number,customers);
+    						transfer(customer_id,amount,customer_account_number,customers,customerfile);
     						customers[customer_id].display_funds();
     						break;
     					default:
@@ -136,14 +129,10 @@ int main () {
 	}
 	h:;
 	// Save updated accounts to temporary file, replace original file
-	ofstream mfile ("bank_data2.csv");
-	for(int i=0;i<customer_account_number.size();i++){
-		customers[i].print(drop);
-	}
-	mfile<<drop;
-	mfile.close();
 	remove("sample_bank_data.csv");
-	rename("bank_data2.csv","sample_bank_data.csv");
+	ofstream mfile ("sample_bank_data.csv");
+	write_csv_file(mfile, customers, drop);
+	mfile.close();
+	customerfile.close();
 	return 0;
 }
-
