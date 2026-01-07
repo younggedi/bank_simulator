@@ -27,7 +27,7 @@ int main () {
 	string admin_password="younggedi123";
 	string responce;
 	l:;
-	cout<<"are you accessing admin or customer account \n";
+	cout<<"are you accessing admin or customer account \n (type 'exit' to quit):";
 	cin>>responce;
 	if(responce=="admin"){
 		cout<<"please enter the admin password:";
@@ -62,7 +62,7 @@ int main () {
 	else if (responce=="customer"){
 		while(true){
 			string account_number,PIN;
-			cout<<"input account number:";
+			cout<<"input account number: \n (type 'exit' to go back to main menu) ";
 			cin>>account_number;
 			cout<<endl;
 			if(account_number=="exit")goto l;
